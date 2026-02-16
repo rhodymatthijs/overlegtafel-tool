@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overlegtafel Tool – Porteum</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <style>
+
+        :root {
+            --primary: #2D5A7B;
+            --primary-light: #3A7CA5;
+            --primary-dark: #1E3F56;
+            --accent: #E8913A;
+            --accent-light: #F5A623;
+            --bg: #F7F5F2;
+            --bg-card: #FFFFFF;
+            --bg-chat: #F0EDE8;
+            --text: #2C2C2C;
+            --text-light: #6B6B6B;
+            --text-muted: #9B9B9B;
+            --border: #E0DCD5;
+            --bot-bubble: #FFFFFF;
+            --user-bubble: #2D5A7B;
+            --user-text: #FFFFFF;
+            --success: #4CAF50;
+            --shadow: 0 2px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Header */
+        .header {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 24px 32px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            color: white;
+            box-shadow: 0 4px 20px rgba(45, 90, 123, 0.3);
+        }
+
+        .header-icon {
+            width: 52px;
+            height: 52px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            flex-shrink: 0;
+        }
+
+        .header-text h1 {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        .header-text p {
+            font-size: 13px;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+
+        /* Main container */
+        .container {
+            width: 100%;
+            max-width: 720px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+        }
+
+        /* Chat area */
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* Message bubbles */
+        .message {
+            display: flex;
+            gap: 10px;
+            max-width: 88%;
+            animation: fadeInUp 0.35s ease-out;
+        }
+
+        .message.bot {
+            align-self: flex-start;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+            margin-top: 4px;
+        }
+
+        .message.bot .avatar {
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            color: white;
+        }
+
+        .message.user .avatar {
+            background: var(--accent);
+            color: white;
+            font-size: 14px;
+        }
+
+        .bubble {
+            padding: 14px 18px;
+            border-radius: var(--radius);
+            line-height: 1.55;
+            font-size: 14.5px;
+            position: relative;
+        }
+
+        .message.bot .bubble {
+            background: var(--bot-bubble);
+            color: var(--text);
+            border-bottom-left-radius: 4px;
+            box-shadow: var(--shadow);
+        }
+
+        .message.user .bubble {
+            background: var(--user-bubble);
+            color: var(--user-text);
+            border-bottom-right-radius: 4px;
+            box-shadow: var(--shadow);
+        }
+
+        .bubble p {
+            margin-bottom: 8px;
+        }
+
+        .bubble p:last-child {
+            margin-bottom: 0;
+        }
+
+        .bubble strong {
+            font-weight: 600;
+        }
+
+        .bubble em {
+            font-style: italic;
+            color: var(--text-light);
+        }
+
+        .message.user .bubble em {
+            color: rgba(255,255,255,0.8);
+        }
+
+        .bubble ul, .bubble ol {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+
+        .bubble li {
+            margin-bottom: 6px;
+        }
+
+        /* Typing indicator */
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 8px 0;
+        }
+
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            animation: typingBounce 1.2s ease-in-out infinite;
+        }
+
+        .typing-indicator span:nth-child(2) { animation-delay: 0.15s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.3s; }
+
+        @keyframes typingBounce {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-6px); opacity: 1; }
+        }
+
+        /* Input area */
+        .input-area {
+            padding: 16px 20px 24px;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border);
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .input-wrapper textarea {
+            flex: 1;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            font-family: inherit;
+            font-size: 14.5px;
+            line-height: 1.5;
+            resize: none;
+            outline: none;
+            transition: border-color 0.2s;
+            min-height: 48px;
+            max-height: 160px;
+            background: var(--bg);
+        }
+
+        .input-wrapper textarea:focus {
+            border-color: var(--primary-light);
+        }
+
+        .input-wrapper textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .send-btn {
+            width: 48px;
+            height: 48px;
+            border: none;
+            background: var(--primary);
+            color: white;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, transform 0.1s;
+            flex-shrink: 0;
+        }
+
+        .send-btn:hover {
+            background: var(--primary-light);
+        }
+
+        .send-btn:active {
+            transform: scale(0.95);
+        }
+
+        .send-btn:disabled {
+            background: var(--border);
+            cursor: not-allowed;
+        }
+
+        .send-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Quick reply buttons */
+        .quick-replies {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+            animation: fadeInUp 0.35s ease-out;
+        }
+
+        .quick-reply-btn {
+            padding: 8px 16px;
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            background: var(--bg-card);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 13.5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-reply-btn:hover {
+            border-color: var(--primary-light);
+            background: rgba(45, 90, 123, 0.05);
+            color: var(--primary);
+        }
+
+        /* Progress bar */
+        .progress-container {
+            padding: 0 20px;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            padding: 14px 0;
+            position: relative;
+        }
+
+        .progress-steps::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--border);
+            transform: translateY(-50%);
+            z-index: 0;
+        }
+
+        .progress-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            z-index: 1;
+            background: var(--bg-card);
+            padding: 0 8px;
+        }
+
+        .step-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            transition: all 0.3s;
+        }
+
+        .step-dot.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 2px 8px rgba(45, 90, 123, 0.3);
+        }
+
+        .step-dot.done {
+            background: var(--success);
+            color: white;
+        }
+
+        .step-label {
+            font-size: 10.5px;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-align: center;
+            max-width: 80px;
+            transition: color 0.3s;
+        }
+
+        .step-label.active {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .step-label.done {
+            color: var(--success);
+        }
+
+        /* Output card */
+        .output-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin: 8px 0;
+            font-size: 14px;
+            line-height: 1.6;
+            box-shadow: var(--shadow);
+        }
+
+        .output-card h3 {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .output-card .field-value {
+            margin-bottom: 16px;
+            white-space: pre-wrap;
+        }
+
+        .output-card .field-value:last-child {
+            margin-bottom: 0;
+        }
+
+        .copy-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 8px;
+        }
+
+        .copy-btn:hover {
+            background: var(--primary-light);
+        }
+
+        .copy-btn.copied {
+            background: var(--success);
+        }
+
+        .restart-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 20px;
+            background: transparent;
+            color: var(--text-light);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 8px;
+            margin-left: 8px;
+        }
+
+        .restart-btn:hover {
+            border-color: var(--text-light);
+            color: var(--text);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Scrollbar */
+        .chat-area::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-area::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chat-area::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .header {
+                padding: 18px 16px;
+            }
+
+            .header-text h1 {
+                font-size: 18px;
+            }
+
+            .chat-area {
+                padding: 16px 12px;
+            }
+
+            .message {
+                max-width: 92%;
+            }
+
+            .input-area {
+                padding: 12px 12px 20px;
+            }
+
+            .progress-step .step-label {
+                font-size: 9.5px;
+                max-width: 60px;
+            }
+        }
+
+        /* Divider line in chat */
+        .chat-divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 16px 0;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .chat-divider::before,
+        .chat-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        /* Textarea hidden state */
+        .input-area.hidden {
+            display: none;
+        }
+
+        /* API Key setup overlay */
+        .api-key-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .api-key-overlay.hidden {
+            display: none;
+        }
+
+        .api-key-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 32px;
+            max-width: 480px;
+            width: 100%;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .api-key-card h2 {
+            font-size: 20px;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .api-key-card p {
+            font-size: 14px;
+            color: var(--text-light);
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+
+        .api-key-card input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+            margin-bottom: 16px;
+            background: var(--bg);
+        }
+
+        .api-key-card input:focus {
+            border-color: var(--primary-light);
+        }
+
+        .api-key-card button {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .api-key-card button:hover {
+            background: var(--primary-light);
+        }
+
+        .api-key-card .error-msg {
+            color: #e53e3e;
+            font-size: 13px;
+            margin-bottom: 12px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="api-key-overlay hidden" id="apiKeyOverlay">
+        <div class="api-key-card">
+            <h2>🤖 Welkom!</h2>
+            <p>Om de Overlegtafel Sparringpartner te gebruiken heb je een API-key nodig. Deze wordt veilig opgeslagen in je browser en hoef je maar één keer in te voeren.</p>
+            <p class="error-msg" id="apiKeyError">Die key lijkt niet te kloppen. Een Anthropic key begint met "sk-ant-".</p>
+            <input type="password" id="apiKeyInput" placeholder="Plak hier je API-key (sk-ant-...)" autocomplete="off">
+            <button onclick="saveApiKey()">Opslaan & starten</button>
+        </div>
+    </div>
+
+    <div class="header">
+        <div class="header-icon">🤖</div>
+        <div class="header-text">
+            <h1>Overlegtafel Tool</h1>
+            <p>Porteum – Samen scherper denken</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="progress-container">
+            <div class="progress-steps">
+                <div class="progress-step">
+                    <div class="step-dot active" id="step-0">1</div>
+                    <div class="step-label active" id="step-label-0">Onderwerp</div>
+                </div>
+                <div class="progress-step">
+                    <div class="step-dot" id="step-1">2</div>
+                    <div class="step-label" id="step-label-1">Verhelderen</div>
+                </div>
+                <div class="progress-step">
+                    <div class="step-dot" id="step-2">3</div>
+                    <div class="step-label" id="step-label-2">Toetsing</div>
+                </div>
+                <div class="progress-step">
+                    <div class="step-dot" id="step-3">4</div>
+                    <div class="step-label" id="step-label-3">Portef.houders</div>
+                </div>
+                <div class="progress-step">
+                    <div class="step-dot" id="step-4">✓</div>
+                    <div class="step-label" id="step-label-4">Output</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-area" id="chatArea">
+            <!-- Messages will be inserted here -->
+        </div>
+
+        <div class="input-area" id="inputArea">
+            <div class="input-wrapper">
+                <textarea id="userInput" rows="1" placeholder="Typ hier je antwoord..." autofocus></textarea>
+                <button class="send-btn" id="sendBtn" onclick="handleSend()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // OVERLEGTAFEL TOOL - AI-Powered Conversation Engine
+        // Powered by Claude (Anthropic)
+        // ============================================
+
+        let API_KEY = localStorage.getItem('overlegtafel_api_key') || '';
+        const API_URL = 'https://api.anthropic.com/v1/messages';
+        const MODEL = 'claude-sonnet-4-5-20250929';
+
+        // The system prompt that makes the robot intelligent about overlegtafel topics
+        const SYSTEM_PROMPT = `Je bent de Overlegtafel Assistent van Porteum. Je helpt bestuurders en stafhoofden om onderwerpen voor te bereiden voor de overlegtafel — een multidisciplinair overleg waar integrale afwegingen worden gemaakt.
+
+## Jouw stijl
+- Warm, menselijk, collegiaal — niet formeel of schools
+- Je mag af en toe een kwinkslag maken (je bent een slim robotje)
+- Je denkt echt mee, je vult niet alleen formulieren in
+- Je reflecteert terug wat je hoort: "Als ik het goed begrijp, bedoel je dat..."
+- Je durft door te vragen: "Maar zit de spanning niet eigenlijk in...?"
+- Schrijf in het Nederlands
+
+## De overlegtafel — context
+De overlegtafel is géén besluitvormingsorgaan. Het is een plek voor gezamenlijk denken, duiden en wegen. Portefeuillehouders (MT-leden) sluiten aan als adviseur — zij beslissen niet, maar brengen het MT-perspectief in.
+
+## Overlegtafelcriteria
+Een onderwerp hoort op de overlegtafel als het voldoet aan één of meer van deze criteria:
+1. **Integrale afweging**: Het raakt meerdere domeinen (onderwijs, financiën, personeel, huisvesting, etc.) en vraagt om een afweging die niet door één domein alleen te maken is.
+2. **Spanning of dilemma**: Er is een spanning zonder eenduidige oplossing — belangen, waarden of perspectieven botsen.
+3. **Gezamenlijke duiding nodig**: Het vraagstuk vraagt om interpretatie vanuit meerdere invalshoeken voordat er richting gegeven kan worden.
+4. **Uitvoering liep eerder vast**: Eerdere pogingen strandden door onvoldoende afstemming of draagvlak.
+5. **Rijkheid van denken**: Het onderwerp is te complex of te belangrijk om door één persoon of één perspectief te laten beoordelen.
+
+Een onderwerp hoort NIET op de overlegtafel als het:
+- Een routinematige uitvoeringsvraag is
+- Al via een ander gremium wordt behandeld
+- Een individuele beslissing is die geen integrale afweging vereist
+
+## Portefeuillehouders
+Portefeuillehouders zijn MT-leden die adviseren vanuit hun portefeuille. Ze hebben GEEN beslismandaat aan de overlegtafel. Ze sluiten aan wanneer:
+- Het onderwerp het onderwijs direct raakt
+- Hun specifieke expertise of perspectief nodig is
+- De spanning zich bevindt op het snijvlak van hun portefeuille
+
+## Het gesprek — flow
+Je voert een natuurlijk gesprek in 4 stappen. Je vertelt de gebruiker NIET welke stap je in zit. Je laat het gesprek organisch verlopen.
+
+### Stap 1: Onderwerp ophalen en direct interpreteren
+- Vraag naar het onderwerp
+- Reflecteer METEEN terug: "Als ik het goed begrijp, gaat dit over... Klopt dat, of zit het anders?"
+- Vraag door op basis van wat je hoort — niet met een vaste vragenlijst, maar contextueel
+- Probeer te achterhalen: de kern van de spanning, wie er geraakt worden, wat er op het spel staat, wat eerder is geprobeerd, wat het gewenste resultaat is
+
+### Stap 2: Toetsing aan criteria
+- Analyseer het onderwerp tegen de overlegtafelcriteria
+- Wees eerlijk: als het niet overlegtafelwaardig is, zeg dat dan ook
+- Leg uit welke criteria het raakt en waarom
+- Vraag of de gebruiker het herkent
+
+### Stap 3: Portefeuillehouders
+- Adviseer of en welke portefeuillehouders moeten aansluiten
+- Onderbouw je advies
+- Geef aan welke voorbereiding nodig is
+
+### Stap 4: Output genereren
+Wanneer je genoeg informatie hebt, genereer dan de output in EXACT dit JSON-format:
+\`\`\`json
+{"type":"output","onderwerp":"...","beschrijving":"...","dilemma":"...","waarom":"...","portefeuillehouders":"..."}
+\`\`\`
+
+De velden:
+- onderwerp: Korte, kernachtige titel
+- beschrijving: 3-5 zinnen die het vraagstuk helder beschrijven — neutraal, feitelijk, met de spanning erin
+- dilemma: 1-3 scherpe vragen die de overlegtafel moet bespreken
+- waarom: Waarom dit overlegtafelwaardig is (welke criteria, waarom nu)
+- portefeuillehouders: Advies over welke portefeuillehouders moeten aansluiten en met welke voorbereiding
+
+## BELANGRIJK
+- Genereer de output JSON PAS als je voldoende informatie hebt — niet te vroeg
+- Het JSON-blok moet op een eigen regel staan, ingesloten in triple backticks
+- Je mag VOOR het JSON-blok nog een afsluitende zin schrijven
+- Voeg na het JSON-blok een reflectievraag toe op een nieuwe regel
+- Stuur NOOIT meer dan één bericht tegelijk — wacht altijd op de gebruiker`;
+
+        // Conversation state
+        let conversationMessages = []; // Claude API message history
+        let currentStep = 0; // For progress bar: 0=topic, 1=clarify, 2=assess, 3=portfolio, 4=output
+        let isProcessing = false;
+        let outputData = null;
+
+        const chatArea = document.getElementById('chatArea');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const inputArea = document.getElementById('inputArea');
+
+        // Auto-resize textarea
+        userInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 160) + 'px';
+        });
+
+        // Enter to send
+        userInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+            }
+        });
+
+        function scrollToBottom() {
+            setTimeout(() => {
+                chatArea.scrollTop = chatArea.scrollHeight;
+            }, 50);
+        }
+
+        function addBotMessage(html) {
+            const msg = document.createElement('div');
+            msg.className = 'message bot';
+            msg.innerHTML = `
+                <div class="avatar">🤖</div>
+                <div class="bubble">${html}</div>
+            `;
+            chatArea.appendChild(msg);
+            scrollToBottom();
+        }
+
+        function addUserMessage(text) {
+            const msg = document.createElement('div');
+            msg.className = 'message user';
+            msg.innerHTML = `
+                <div class="avatar">👤</div>
+                <div class="bubble"><p>${escapeHtml(text)}</p></div>
+            `;
+            chatArea.appendChild(msg);
+            scrollToBottom();
+        }
+
+        function addTypingIndicator() {
+            const msg = document.createElement('div');
+            msg.className = 'message bot';
+            msg.id = 'typingIndicator';
+            msg.innerHTML = `
+                <div class="avatar">🤖</div>
+                <div class="bubble">
+                    <div class="typing-indicator">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+            `;
+            chatArea.appendChild(msg);
+            scrollToBottom();
+        }
+
+        function removeTypingIndicator() {
+            const el = document.getElementById('typingIndicator');
+            if (el) el.remove();
+        }
+
+        function addQuickReplies(options) {
+            const container = document.createElement('div');
+            container.className = 'quick-replies';
+            container.id = 'quickReplies';
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'quick-reply-btn';
+                btn.textContent = opt;
+                btn.onclick = () => {
+                    container.remove();
+                    userInput.value = opt;
+                    handleSend();
+                };
+                container.appendChild(btn);
+            });
+            chatArea.appendChild(container);
+            scrollToBottom();
+        }
+
+        function addDivider(text) {
+            const div = document.createElement('div');
+            div.className = 'chat-divider';
+            div.textContent = text;
+            chatArea.appendChild(div);
+        }
+
+        function updateProgress(stepIndex) {
+            currentStep = stepIndex;
+            for (let i = 0; i < 5; i++) {
+                const dot = document.getElementById(`step-${i}`);
+                const label = document.getElementById(`step-label-${i}`);
+                dot.className = 'step-dot';
+                label.className = 'step-label';
+                if (i < stepIndex) {
+                    dot.className = 'step-dot done';
+                    dot.textContent = '✓';
+                    label.className = 'step-label done';
+                } else if (i === stepIndex) {
+                    dot.className = 'step-dot active';
+                    label.className = 'step-label active';
+                }
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Convert markdown-like text from Claude to HTML
+        function formatResponse(text) {
+            // Remove any code block with JSON output (handled separately)
+            let clean = text;
+
+            // Bold: **text**
+            clean = clean.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            // Italic: *text*
+            clean = clean.replace(/\*(.+?)\*/g, '<em>$1</em>');
+            // Bullet lists
+            clean = clean.replace(/^[-•]\s+(.+)$/gm, '<li>$1</li>');
+            clean = clean.replace(/(<li>.*<\/li>\n?)+/gs, match => `<ul>${match}</ul>`);
+            // Numbered lists
+            clean = clean.replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>');
+            // Paragraphs: split on double newlines
+            const parts = clean.split(/\n\n+/);
+            clean = parts.map(p => {
+                p = p.trim();
+                if (!p) return '';
+                if (p.startsWith('<ul>') || p.startsWith('<ol>') || p.startsWith('<li>')) return p;
+                // Wrap lines in <p> if not already wrapped
+                if (!p.startsWith('<p>')) return `<p>${p.replace(/\n/g, '<br>')}</p>`;
+                return p;
+            }).join('');
+
+            return clean;
+        }
+
+        // Extract JSON output block from Claude's response
+        function extractOutputJSON(text) {
+            // Look for JSON in code blocks
+            const codeBlockMatch = text.match(/```json?\s*\n?\s*(\{[\s\S]*?"type"\s*:\s*"output"[\s\S]*?\})\s*\n?\s*```/);
+            if (codeBlockMatch) {
+                try {
+                    return JSON.parse(codeBlockMatch[1]);
+                } catch (e) {
+                    console.error('Failed to parse output JSON:', e);
+                }
+            }
+            // Also try without code blocks — raw JSON
+            const rawMatch = text.match(/(\{"type"\s*:\s*"output"[\s\S]*?\})/);
+            if (rawMatch) {
+                try {
+                    return JSON.parse(rawMatch[1]);
+                } catch (e) {
+                    console.error('Failed to parse raw output JSON:', e);
+                }
+            }
+            return null;
+        }
+
+        // Remove the JSON block from Claude's text to get the surrounding message
+        function removeOutputJSON(text) {
+            return text
+                .replace(/```json?\s*\n?\s*\{[\s\S]*?"type"\s*:\s*"output"[\s\S]*?\}\s*\n?\s*```/g, '')
+                .trim();
+        }
+
+        // Detect which step we're in based on conversation length and content
+        function detectStep(assistantText) {
+            const msgCount = conversationMessages.length;
+            const lower = assistantText.toLowerCase();
+
+            // If output JSON is present → step 4
+            if (extractOutputJSON(assistantText)) return 4;
+            // Check for portfolio-related keywords
+            if (lower.includes('portefeuillehouder') && (lower.includes('aansluiten') || lower.includes('advies') || lower.includes('voorbereiding'))) return 3;
+            // Check for criteria/assessment keywords
+            if (lower.includes('overlegtafelcriter') || lower.includes('overlegtafelwaardig') || (lower.includes('criteria') && lower.includes('raakt'))) return 2;
+            // Early conversation = clarifying
+            if (msgCount >= 2) return 1;
+            return 0;
+        }
+
+        // Call Claude API
+        async function callClaude(userText) {
+            // Add user message to history
+            conversationMessages.push({ role: 'user', content: userText });
+
+            const body = {
+                model: MODEL,
+                max_tokens: 1024,
+                system: SYSTEM_PROMPT,
+                messages: conversationMessages
+            };
+
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-api-key': API_KEY,
+                    'anthropic-version': '2023-06-01',
+                    'anthropic-dangerous-direct-browser-access': 'true'
+                },
+                body: JSON.stringify(body)
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`API Error ${response.status}: ${errorText}`);
+            }
+
+            const data = await response.json();
+            const assistantText = data.content[0].text;
+
+            // Add assistant response to history
+            conversationMessages.push({ role: 'assistant', content: assistantText });
+
+            return assistantText;
+        }
+
+        // ============================================
+        // CONVERSATION FLOW
+        // ============================================
+
+        // API Key management
+        function checkApiKey() {
+            if (!API_KEY) {
+                document.getElementById('apiKeyOverlay').classList.remove('hidden');
+                return false;
+            }
+            return true;
+        }
+
+        function saveApiKey() {
+            const input = document.getElementById('apiKeyInput');
+            const key = input.value.trim();
+            const errorEl = document.getElementById('apiKeyError');
+
+            if (!key.startsWith('sk-ant-')) {
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            errorEl.style.display = 'none';
+            API_KEY = key;
+            localStorage.setItem('overlegtafel_api_key', key);
+            document.getElementById('apiKeyOverlay').classList.add('hidden');
+            startConversation();
+        }
+
+        // Allow Enter to submit key
+        document.getElementById('apiKeyInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') saveApiKey();
+        });
+
+        // Start the conversation
+        function startConversation() {
+            addBotMessage(`
+                <p><strong>Hoi! 👋</strong></p>
+                <p>Ik ben je digitale sparringpartner voor de overlegtafel. Ik help je om een onderwerp scherp te krijgen — of om te ontdekken dat het misschien helemaal niet op de tafel hoeft.</p>
+                <p>Geen zorgen: ik oordeel niet, ik help denken. En ja, het mag nog onaf zijn. Juist goed zelfs.</p>
+                <p><strong>Wat is het onderwerp of vraagstuk dat je wilt voorbereiden?</strong></p>
+            `);
+        }
+
+        // Only start if we have an API key
+        if (checkApiKey()) {
+            startConversation();
+        }
+
+        // Handle send
+        async function handleSend() {
+            const text = userInput.value.trim();
+            if (!text || isProcessing) return;
+
+            isProcessing = true;
+            sendBtn.disabled = true;
+
+            addUserMessage(text);
+            userInput.value = '';
+            userInput.style.height = 'auto';
+
+            // Remove any quick replies
+            const qr = document.getElementById('quickReplies');
+            if (qr) qr.remove();
+
+            addTypingIndicator();
+
+            try {
+                const response = await callClaude(text);
+                removeTypingIndicator();
+
+                // Detect step for progress bar
+                const step = detectStep(response);
+                if (step > currentStep) {
+                    // Add divider for new steps
+                    const dividers = {
+                        1: 'Verhelderen',
+                        2: 'Toetsing aan overlegtafelcriteria',
+                        3: 'Portefeuillehouders',
+                        4: 'Output'
+                    };
+                    if (dividers[step]) {
+                        addDivider(`Stap ${step} – ${dividers[step]}`);
+                    }
+                    updateProgress(step);
+                }
+
+                // Check for output JSON in response
+                const outputJSON = extractOutputJSON(response);
+
+                if (outputJSON) {
+                    // There's an output! Show surrounding text + output card
+                    const surroundingText = removeOutputJSON(response);
+
+                    if (surroundingText) {
+                        // Split: text before and after the JSON block
+                        const parts = surroundingText.split(/\n\n+/).filter(p => p.trim());
+                        // Show pre-output message
+                        const preText = parts.filter(p => !p.includes('reflectie') && !p.includes('stil te staan') && !p.includes('tot slot')).join('\n\n');
+                        const reflectionText = parts.filter(p => p.includes('reflectie') || p.includes('stil te staan') || p.includes('tot slot')).join('\n\n');
+
+                        if (preText) {
+                            addBotMessage(formatResponse(preText));
+                        }
+                    }
+
+                    // Render the output card
+                    outputData = outputJSON;
+                    renderOutputCard(outputJSON);
+
+                    // Show reflection if present
+                    const reflectionParts = surroundingText.split(/\n\n+/).filter(p =>
+                        p.toLowerCase().includes('reflectie') ||
+                        p.toLowerCase().includes('stil te staan') ||
+                        p.toLowerCase().includes('tot slot') ||
+                        p.toLowerCase().includes('eerlijk') ||
+                        p.toLowerCase().includes('bevestiging')
+                    );
+                    if (reflectionParts.length > 0) {
+                        addBotMessage(formatResponse(reflectionParts.join('\n\n')));
+                    }
+
+                    // Hide input
+                    inputArea.classList.add('hidden');
+                } else {
+                    // Regular conversation message
+                    addBotMessage(formatResponse(response));
+
+                    // Add contextual quick replies
+                    const lower = response.toLowerCase();
+                    if (lower.includes('klopt dat') || lower.includes('herken je') || lower.includes('zie je dat anders') || lower.includes('klopt dit')) {
+                        addQuickReplies(['Ja, dat klopt', 'Niet helemaal, het zit meer in...']);
+                    } else if (lower.includes('eens?') || lower.includes('akkoord?') || lower.includes('ga je mee')) {
+                        addQuickReplies(['Eens, ga verder', 'Ik zie het anders']);
+                    } else if (lower.includes('wil je aanpassen') || lower.includes('iets toevoegen')) {
+                        addQuickReplies(['Nee, klopt zo', 'Ja, ik wil iets aanpassen']);
+                    }
+                }
+
+            } catch (error) {
+                removeTypingIndicator();
+                console.error('Claude API error:', error);
+
+                addBotMessage(`
+                    <p><strong>Oeps, er ging iets mis 😅</strong></p>
+                    <p>Ik kon even geen verbinding maken met mijn denk-engine. Probeer het nog eens?</p>
+                    <p><em style="font-size: 12px; color: var(--text-muted);">${escapeHtml(error.message)}</em></p>
+                `);
+            }
+
+            isProcessing = false;
+            sendBtn.disabled = false;
+            userInput.focus();
+        }
+
+        function renderOutputCard(output) {
+            const card = document.createElement('div');
+            card.className = 'message bot';
+            card.style.maxWidth = '100%';
+            card.innerHTML = `
+                <div class="avatar">🤖</div>
+                <div class="bubble" style="padding: 0; overflow: hidden;">
+                    <div class="output-card" style="border: none; box-shadow: none; margin: 0;">
+                        <h3>Onderwerp:</h3>
+                        <div class="field-value">${escapeHtml(output.onderwerp)}</div>
+
+                        <h3>Kernachtige beschrijving:</h3>
+                        <div class="field-value">${escapeHtml(output.beschrijving)}</div>
+
+                        <h3>Vraag / Dilemma voor de overlegtafel:</h3>
+                        <div class="field-value">${escapeHtml(output.dilemma)}</div>
+
+                        <h3>Waarom overlegtafelwaardig:</h3>
+                        <div class="field-value">${escapeHtml(output.waarom)}</div>
+
+                        <h3>Portefeuillehouders:</h3>
+                        <div class="field-value">${escapeHtml(output.portefeuillehouders)}</div>
+                    </div>
+                    <div style="padding: 0 24px 20px;">
+                        <button class="copy-btn" onclick="copyOutput()">📋 Kopieer naar klembord</button>
+                        <button class="restart-btn" onclick="restartConversation()">🔄 Nieuw onderwerp</button>
+                    </div>
+                </div>
+            `;
+            chatArea.appendChild(card);
+            scrollToBottom();
+        }
+
+        function copyOutput() {
+            if (!outputData) return;
+            const o = outputData;
+            const text = `Onderwerp:\n${o.onderwerp}\n\nKernachtige beschrijving:\n${o.beschrijving}\n\nVraag / Dilemma voor de overlegtafel:\n${o.dilemma}\n\nWaarom overlegtafelwaardig:\n${o.waarom}\n\nPortefeuillehouders:\n${o.portefeuillehouders}`;
+
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.classList.add('copied');
+                btn.innerHTML = '✅ Gekopieerd!';
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.innerHTML = '📋 Kopieer naar klembord';
+                }, 2500);
+            });
+        }
+
+        function restartConversation() {
+            conversationMessages = [];
+            currentStep = 0;
+            outputData = null;
+            isProcessing = false;
+
+            chatArea.innerHTML = '';
+            inputArea.classList.remove('hidden');
+            sendBtn.disabled = false;
+            updateProgress(0);
+
+            // Reset step dots
+            for (let i = 0; i < 5; i++) {
+                const dot = document.getElementById(`step-${i}`);
+                if (i === 4) dot.textContent = '✓';
+                else dot.textContent = (i + 1).toString();
+            }
+
+            startConversation();
+        }
+    </script>
+</body>
+</html>
