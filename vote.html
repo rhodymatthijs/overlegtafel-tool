@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overlegtafel – Stemmen op onderwerpen</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <style>
+        :root {
+            --primary: #2D5A7B;
+            --primary-light: #3A7CA5;
+            --primary-dark: #1E3F56;
+            --accent: #E8913A;
+            --accent-light: #F5A623;
+            --bg: #F7F5F2;
+            --bg-card: #FFFFFF;
+            --text: #2C2C2C;
+            --text-light: #6B6B6B;
+            --text-muted: #9B9B9B;
+            --border: #E0DCD5;
+            --success: #4CAF50;
+            --shadow: 0 2px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .header {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 24px 32px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            color: white;
+            box-shadow: 0 4px 20px rgba(45, 90, 123, 0.3);
+        }
+
+        .header-icon {
+            width: 52px;
+            height: 52px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            flex-shrink: 0;
+        }
+
+        .header-text h1 {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        .header-text p {
+            font-size: 13px;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 24px 20px 60px;
+        }
+
+        .intro {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--accent);
+        }
+
+        .intro h2 {
+            font-size: 17px;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .intro p {
+            font-size: 14px;
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        .items-count {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+
+        .agenda-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 0;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transition: box-shadow 0.2s;
+        }
+
+        .agenda-card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 20px 24px 0;
+        }
+
+        .card-title {
+            flex: 1;
+        }
+
+        .card-title h3 {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .card-meta {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .card-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .vote-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 70px;
+            margin-left: 16px;
+        }
+
+        .vote-count {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary);
+            line-height: 1;
+        }
+
+        .vote-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .vote-btn {
+            margin-top: 8px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            background: var(--bg);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            transition: all 0.2s;
+        }
+
+        .vote-btn:hover {
+            border-color: var(--accent);
+            background: rgba(232, 145, 58, 0.08);
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            border-color: var(--accent);
+            background: var(--accent);
+            color: white;
+            cursor: default;
+        }
+
+        .vote-btn.voted:hover {
+            transform: scale(1);
+        }
+
+        .card-body {
+            padding: 16px 24px;
+        }
+
+        .card-field {
+            margin-bottom: 12px;
+        }
+
+        .card-field:last-child {
+            margin-bottom: 0;
+        }
+
+        .card-field label {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .card-field p {
+            font-size: 14px;
+            color: var(--text);
+            line-height: 1.55;
+        }
+
+        .card-footer {
+            padding: 12px 24px;
+            background: var(--bg);
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            font-size: 11.5px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            background: rgba(45, 90, 123, 0.08);
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            color: var(--text-light);
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+            max-width: 400px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .loading .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .sort-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .sort-btn {
+            padding: 6px 14px;
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            background: var(--bg-card);
+            color: var(--text-light);
+            font-family: inherit;
+            font-size: 12.5px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sort-btn.active {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: rgba(45, 90, 123, 0.05);
+        }
+
+        .sort-btn:hover {
+            border-color: var(--primary-light);
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--primary);
+            font-size: 13.5px;
+            text-decoration: none;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+
+        .back-link:hover {
+            color: var(--primary-light);
+        }
+
+        @media (max-width: 600px) {
+            .header { padding: 18px 16px; }
+            .header-text h1 { font-size: 18px; }
+            .container { padding: 16px 12px 40px; }
+            .card-header { padding: 16px 16px 0; }
+            .card-body { padding: 12px 16px; }
+            .card-footer { padding: 10px 16px; }
+            .vote-section { min-width: 60px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-icon">🗳️</div>
+        <div class="header-text">
+            <h1>Overlegtafel – Stemmen</h1>
+            <p>Porteum – Samen bepalen wat prioriteit heeft</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <a href="index.html" class="back-link">← Terug naar Sparringpartner</a>
+
+        <div class="intro">
+            <h2>Welke onderwerpen behandelen we als eerste?</h2>
+            <p>Hieronder staan de ingebrachte onderwerpen voor de overlegtafel. Stem op de onderwerpen die jij het belangrijkst vindt — je kunt op meerdere onderwerpen stemmen, maar slechts één keer per onderwerp.</p>
+        </div>
+
+        <div class="sort-bar">
+            <button class="sort-btn active" onclick="sortItems('votes')">🔥 Meeste stemmen</button>
+            <button class="sort-btn" onclick="sortItems('date')">🕐 Nieuwste eerst</button>
+        </div>
+
+        <div id="itemsCount" class="items-count"></div>
+
+        <div id="agendaList">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Onderwerpen laden...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <script>
+        // Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDxhrx8JeNt2YLqrFTmF6DK4ZFJatJSNKw",
+            authDomain: "overlegtafel-porteum.firebaseapp.com",
+            databaseURL: "https://overlegtafel-porteum-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "overlegtafel-porteum",
+            storageBucket: "overlegtafel-porteum.firebasestorage.app",
+            messagingSenderId: "655753632325",
+            appId: "1:655753632325:web:dd6c34ba5eb4a1c0cde12c"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let currentSort = 'votes';
+        let agendaItems = {};
+
+        // Track which items user has voted on (per browser)
+        function getVotedItems() {
+            try {
+                return JSON.parse(localStorage.getItem('overlegtafel_votes') || '{}');
+            } catch { return {}; }
+        }
+
+        function markVoted(itemId) {
+            const voted = getVotedItems();
+            voted[itemId] = true;
+            localStorage.setItem('overlegtafel_votes', JSON.stringify(voted));
+        }
+
+        function hasVoted(itemId) {
+            return getVotedItems()[itemId] === true;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatDate(isoString) {
+            const d = new Date(isoString);
+            const day = d.getDate().toString().padStart(2, '0');
+            const month = (d.getMonth() + 1).toString().padStart(2, '0');
+            const year = d.getFullYear();
+            return `${day}-${month}-${year}`;
+        }
+
+        function sortItems(by) {
+            currentSort = by;
+            document.querySelectorAll('.sort-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            renderItems();
+        }
+
+        function renderItems() {
+            const list = document.getElementById('agendaList');
+            const countEl = document.getElementById('itemsCount');
+            const keys = Object.keys(agendaItems);
+
+            if (keys.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📭</div>
+                        <h3>Nog geen onderwerpen</h3>
+                        <p>Er zijn nog geen onderwerpen ingebracht. Gebruik de <a href="index.html" style="color: var(--primary);">Sparringpartner</a> om een onderwerp voor te bereiden en op de agenda te plaatsen.</p>
+                    </div>
+                `;
+                countEl.textContent = '';
+                return;
+            }
+
+            // Sort
+            const sorted = keys.sort((a, b) => {
+                if (currentSort === 'votes') {
+                    return (agendaItems[b].votes || 0) - (agendaItems[a].votes || 0);
+                } else {
+                    return new Date(agendaItems[b].datum) - new Date(agendaItems[a].datum);
+                }
+            });
+
+            countEl.textContent = `${keys.length} onderwerp${keys.length === 1 ? '' : 'en'} op de agenda`;
+
+            list.innerHTML = sorted.map(key => {
+                const item = agendaItems[key];
+                const voted = hasVoted(key);
+                const voteCount = item.votes || 0;
+
+                return `
+                    <div class="agenda-card">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <h3>${escapeHtml(item.onderwerp)}</h3>
+                                <div class="card-meta">
+                                    <span>👤 ${escapeHtml(item.auteur || 'Onbekend')}</span>
+                                    <span>📅 ${item.datum ? formatDate(item.datum) : '—'}</span>
+                                </div>
+                            </div>
+                            <div class="vote-section">
+                                <div class="vote-count">${voteCount}</div>
+                                <div class="vote-label">stem${voteCount === 1 ? '' : 'men'}</div>
+                                <button class="vote-btn ${voted ? 'voted' : ''}"
+                                    onclick="${voted ? '' : `vote('${key}')`}"
+                                    title="${voted ? 'Je hebt al gestemd' : 'Stem op dit onderwerp'}">
+                                    ${voted ? '✓' : '▲'}
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="card-field">
+                                <label>Beschrijving</label>
+                                <p>${escapeHtml(item.beschrijving || '')}</p>
+                            </div>
+                            <div class="card-field">
+                                <label>Vraag / Dilemma</label>
+                                <p>${escapeHtml(item.dilemma || '')}</p>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <span class="tag">Status: ${escapeHtml(item.status || 'nieuw')}</span>
+                            ${item.portefeuillehouders ? `<span class="tag">PH: ${escapeHtml(item.portefeuillehouders).substring(0, 50)}${item.portefeuillehouders.length > 50 ? '...' : ''}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function vote(itemId) {
+            if (hasVoted(itemId)) return;
+
+            // Increment vote in Firebase
+            const ref = db.ref('agenda/' + itemId + '/votes');
+            ref.transaction(currentVotes => (currentVotes || 0) + 1)
+                .then(() => {
+                    markVoted(itemId);
+                    // The realtime listener will update the UI
+                })
+                .catch(err => {
+                    console.error('Vote error:', err);
+                    alert('Er ging iets mis bij het stemmen. Probeer het opnieuw.');
+                });
+        }
+
+        // Listen for realtime updates
+        db.ref('agenda').on('value', (snapshot) => {
+            agendaItems = snapshot.val() || {};
+            renderItems();
+        });
+    </script>
+</body>
+</html>
