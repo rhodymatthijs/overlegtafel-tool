@@ -549,6 +549,146 @@
             display: none;
         }
 
+        /* Agenda button */
+        .agenda-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 20px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 8px;
+            margin-left: 8px;
+        }
+
+        .agenda-btn:hover {
+            background: var(--accent-light);
+        }
+
+        .agenda-btn.submitted {
+            background: var(--success);
+            cursor: default;
+        }
+
+        /* Name input overlay */
+        .name-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .name-dialog {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 32px;
+            width: 90%;
+            max-width: 420px;
+            box-shadow: var(--shadow-lg);
+            animation: fadeInUp 0.3s ease-out;
+        }
+
+        .name-dialog h2 {
+            font-size: 18px;
+            color: var(--primary);
+            margin-bottom: 6px;
+        }
+
+        .name-dialog p {
+            font-size: 14px;
+            color: var(--text-light);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .name-dialog input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.2s;
+            margin-bottom: 16px;
+        }
+
+        .name-dialog input:focus {
+            border-color: var(--primary-light);
+        }
+
+        .name-dialog .dialog-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .name-dialog .cancel-btn {
+            padding: 10px 20px;
+            background: transparent;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 14px;
+            cursor: pointer;
+            color: var(--text-light);
+        }
+
+        .name-dialog .submit-btn {
+            padding: 10px 24px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .name-dialog .submit-btn:hover {
+            background: var(--accent-light);
+        }
+
+        /* Success message */
+        .success-message {
+            background: #E8F5E9;
+            border: 2px solid var(--success);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            margin: 12px 0;
+            animation: fadeInUp 0.35s ease-out;
+        }
+
+        .success-message h4 {
+            color: var(--success);
+            font-size: 15px;
+            margin-bottom: 6px;
+        }
+
+        .success-message p {
+            font-size: 13.5px;
+            color: var(--text);
+            line-height: 1.5;
+        }
+
     </style>
 </head>
 <body>
@@ -604,11 +744,28 @@
         </div>
     </div>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
     <script>
         // ============================================
         // OVERLEGTAFEL TOOL - AI-Powered Conversation Engine
-        // Powered by Claude (Anthropic)
+        // Powered by Claude (Anthropic) + Firebase
         // ============================================
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDxhrx8JeNt2YLqrFTmF6DK4ZFJatJSNKw",
+            authDomain: "overlegtafel-porteum.firebaseapp.com",
+            databaseURL: "https://overlegtafel-porteum-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "overlegtafel-porteum",
+            storageBucket: "overlegtafel-porteum.firebasestorage.app",
+            messagingSenderId: "655753632325",
+            appId: "1:655753632325:web:dd6c34ba5eb4a1c0cde12c"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
         // API key (split to avoid detection by automated scanners)
         const _k = ['sk-ant-api03-lafT5jdvel0NIdFEh','lPzU7whqyhgugCG1Z8pLMQVU2iljgX-1VivUfhtGfmSN5-FMte1GOMpJq7ZUxKHEXWaMw-MzxlYwAA'];
@@ -1057,6 +1214,7 @@ De velden:
                     </div>
                     <div style="padding: 0 24px 20px;">
                         <button class="copy-btn" onclick="copyOutput()">📋 Kopieer naar klembord</button>
+                        <button class="agenda-btn" id="agendaBtn" onclick="showNameDialog()">📌 Plaats op agenda</button>
                         <button class="restart-btn" onclick="restartConversation()">🔄 Nieuw onderwerp</button>
                     </div>
                 </div>
@@ -1079,6 +1237,97 @@ De velden:
                     btn.innerHTML = '📋 Kopieer naar klembord';
                 }, 2500);
             });
+        }
+
+        // ============================================
+        // FIREBASE: Plaats op agenda
+        // ============================================
+
+        function showNameDialog() {
+            const overlay = document.createElement('div');
+            overlay.className = 'name-overlay';
+            overlay.id = 'nameOverlay';
+            overlay.innerHTML = `
+                <div class="name-dialog">
+                    <h2>📌 Plaats op de agenda</h2>
+                    <p>Vul je naam in zodat collega's weten wie dit onderwerp heeft ingebracht.</p>
+                    <input type="text" id="nameInput" placeholder="Je naam..." autofocus>
+                    <div class="dialog-buttons">
+                        <button class="cancel-btn" onclick="closeNameDialog()">Annuleren</button>
+                        <button class="submit-btn" onclick="submitToAgenda()">Plaatsen</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            // Focus name input
+            setTimeout(() => document.getElementById('nameInput').focus(), 100);
+
+            // Enter to submit
+            document.getElementById('nameInput').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') submitToAgenda();
+            });
+
+            // Click outside to close
+            overlay.addEventListener('click', function(e) {
+                if (e.target === overlay) closeNameDialog();
+            });
+        }
+
+        function closeNameDialog() {
+            const overlay = document.getElementById('nameOverlay');
+            if (overlay) overlay.remove();
+        }
+
+        function submitToAgenda() {
+            const nameInput = document.getElementById('nameInput');
+            const name = nameInput ? nameInput.value.trim() : '';
+            if (!name) {
+                nameInput.style.borderColor = '#e74c3c';
+                nameInput.placeholder = 'Vul je naam in...';
+                return;
+            }
+            if (!outputData) return;
+
+            // Save to Firebase
+            const agendaItem = {
+                auteur: name,
+                onderwerp: outputData.onderwerp,
+                beschrijving: outputData.beschrijving,
+                dilemma: outputData.dilemma,
+                waarom: outputData.waarom,
+                portefeuillehouders: outputData.portefeuillehouders,
+                datum: new Date().toISOString(),
+                votes: 0,
+                status: 'nieuw'
+            };
+
+            db.ref('agenda').push(agendaItem)
+                .then(() => {
+                    closeNameDialog();
+
+                    // Update button
+                    const btn = document.getElementById('agendaBtn');
+                    btn.classList.add('submitted');
+                    btn.innerHTML = '✅ Op de agenda geplaatst';
+                    btn.onclick = null;
+
+                    // Show success message
+                    const msg = document.createElement('div');
+                    msg.className = 'success-message';
+                    msg.innerHTML = `
+                        <h4>✅ Geplaatst op de agenda!</h4>
+                        <p>Je onderwerp "<strong>${escapeHtml(outputData.onderwerp)}</strong>" is toegevoegd aan de agenda-lijst.
+                        Voorafgaand aan de vergadering bepalen we samen welke onderwerpen als eerste behandeld worden —
+                        je collega's kunnen stemmen via de <a href="vote.html" style="color: var(--primary);">stempagina</a>.</p>
+                    `;
+                    chatArea.appendChild(msg);
+                    scrollToBottom();
+                })
+                .catch((error) => {
+                    console.error('Firebase error:', error);
+                    alert('Er ging iets mis bij het opslaan. Probeer het opnieuw.');
+                });
         }
 
         function restartConversation() {
