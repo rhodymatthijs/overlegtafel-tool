@@ -502,6 +502,7 @@
         <div class="sort-bar">
             <button class="sort-btn active" onclick="sortItems('votes')">🔥 Meeste stemmen</button>
             <button class="sort-btn" onclick="sortItems('date')">🕐 Nieuwste eerst</button>
+            <button class="sort-btn agenda-export-btn" id="exportBtn" onclick="generateAgendaDoc()" style="margin-left: auto; background: var(--primary); color: white; border-color: var(--primary);">📄 Maak agenda (Top 3)</button>
         </div>
 
         <div id="itemsCount" class="items-count"></div>
@@ -517,6 +518,9 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <!-- docx library for Word export -->
+    <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
     <script>
         // Firebase config
@@ -733,6 +737,207 @@
                     console.error('Delete error:', err);
                     alert('Er ging iets mis bij het verwijderen. Probeer het opnieuw.');
                 });
+        }
+
+        // ============================================
+        // WORD EXPORT: Genereer agenda document (Top 3)
+        // ============================================
+
+        const EXPORT_PASSWORD = '2304';
+
+        function generateAgendaDoc() {
+            const keys = Object.keys(agendaItems);
+            if (keys.length === 0) {
+                alert('Er zijn nog geen onderwerpen om een agenda van te maken.');
+                return;
+            }
+
+            // Vraag wachtwoord
+            const overlay = document.createElement('div');
+            overlay.className = 'delete-overlay';
+            overlay.id = 'exportOverlay';
+            overlay.innerHTML = `
+                <div class="delete-dialog" style="border-top: 4px solid var(--primary);">
+                    <h2 style="color: var(--primary);">📄 Agenda genereren</h2>
+                    <p>Dit is alleen voor de procesbegeleider. Voer het wachtwoord in om een Word-document te maken van de top 3 onderwerpen.</p>
+                    <input type="password" id="exportPassword" placeholder="Wachtwoord..." autofocus>
+                    <div class="error-msg" id="exportError">Onjuist wachtwoord.</div>
+                    <div class="dialog-buttons">
+                        <button class="cancel-btn" onclick="closeExportDialog()">Annuleren</button>
+                        <button class="confirm-delete-btn" style="background: var(--primary);" onmouseover="this.style.background='var(--primary-light)'" onmouseout="this.style.background='var(--primary)'" onclick="confirmExport()">Genereren</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            setTimeout(() => document.getElementById('exportPassword').focus(), 100);
+
+            document.getElementById('exportPassword').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') confirmExport();
+            });
+
+            overlay.addEventListener('click', function(e) {
+                if (e.target === overlay) closeExportDialog();
+            });
+        }
+
+        function closeExportDialog() {
+            const overlay = document.getElementById('exportOverlay');
+            if (overlay) overlay.remove();
+        }
+
+        function confirmExport() {
+            const input = document.getElementById('exportPassword');
+            const errorMsg = document.getElementById('exportError');
+            const pw = input.value.trim();
+
+            if (pw !== EXPORT_PASSWORD) {
+                errorMsg.style.display = 'block';
+                input.style.borderColor = '#e74c3c';
+                input.value = '';
+                input.focus();
+                return;
+            }
+
+            closeExportDialog();
+            buildWordDocument();
+        }
+
+        function buildWordDocument() {
+            const { Document, Packer, Paragraph, TextRun, HeadingLevel, BorderStyle, AlignmentType, TabStopType, TabStopPosition } = docx;
+
+            // Get top 3 by votes
+            const keys = Object.keys(agendaItems);
+            const top3 = keys
+                .sort((a, b) => (agendaItems[b].votes || 0) - (agendaItems[a].votes || 0))
+                .slice(0, 3)
+                .map(k => agendaItems[k]);
+
+            const today = new Date();
+            const dateStr = today.toLocaleDateString('nl-NL', { day: 'numeric', month: 'long', year: 'numeric' });
+
+            const sections = [];
+
+            // Title
+            sections.push(
+                new Paragraph({
+                    children: [new TextRun({ text: 'Agenda Overlegtafel Porteum', bold: true, size: 36, color: '2D5A7B', font: 'Calibri' })],
+                    spacing: { after: 100 }
+                }),
+                new Paragraph({
+                    children: [new TextRun({ text: dateStr, size: 22, color: '6B6B6B', font: 'Calibri' })],
+                    spacing: { after: 200 }
+                }),
+                new Paragraph({
+                    children: [new TextRun({ text: `Top ${top3.length} onderwerpen op basis van stemmen`, size: 22, color: '6B6B6B', italics: true, font: 'Calibri' })],
+                    spacing: { after: 400 }
+                })
+            );
+
+            // Divider
+            sections.push(new Paragraph({
+                border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: 'E0DCD5' } },
+                spacing: { after: 300 }
+            }));
+
+            // Each topic
+            top3.forEach((item, i) => {
+                const voteCount = item.votes || 0;
+
+                sections.push(
+                    new Paragraph({
+                        children: [
+                            new TextRun({ text: `${i + 1}. `, bold: true, size: 28, color: '2D5A7B', font: 'Calibri' }),
+                            new TextRun({ text: item.onderwerp || 'Zonder titel', bold: true, size: 28, color: '2D5A7B', font: 'Calibri' }),
+                        ],
+                        spacing: { after: 100 }
+                    }),
+                    new Paragraph({
+                        children: [
+                            new TextRun({ text: `Ingebracht door: `, bold: true, size: 20, color: '6B6B6B', font: 'Calibri' }),
+                            new TextRun({ text: item.auteur || 'Onbekend', size: 20, color: '6B6B6B', font: 'Calibri' }),
+                            new TextRun({ text: `    |    ${voteCount} stem${voteCount === 1 ? '' : 'men'}`, size: 20, color: '9B9B9B', font: 'Calibri' }),
+                        ],
+                        spacing: { after: 200 }
+                    })
+                );
+
+                // Beschrijving
+                sections.push(
+                    new Paragraph({
+                        children: [new TextRun({ text: 'Beschrijving', bold: true, size: 20, color: '2D5A7B', font: 'Calibri', allCaps: true })],
+                        spacing: { after: 60 }
+                    }),
+                    new Paragraph({
+                        children: [new TextRun({ text: item.beschrijving || '', size: 22, font: 'Calibri' })],
+                        spacing: { after: 200 }
+                    })
+                );
+
+                // Dilemma
+                sections.push(
+                    new Paragraph({
+                        children: [new TextRun({ text: 'Vraag / Dilemma', bold: true, size: 20, color: '2D5A7B', font: 'Calibri', allCaps: true })],
+                        spacing: { after: 60 }
+                    }),
+                    new Paragraph({
+                        children: [new TextRun({ text: item.dilemma || '', size: 22, font: 'Calibri' })],
+                        spacing: { after: 200 }
+                    })
+                );
+
+                // Waarom
+                sections.push(
+                    new Paragraph({
+                        children: [new TextRun({ text: 'Waarom overlegtafelwaardig', bold: true, size: 20, color: '2D5A7B', font: 'Calibri', allCaps: true })],
+                        spacing: { after: 60 }
+                    }),
+                    new Paragraph({
+                        children: [new TextRun({ text: item.waarom || '', size: 22, font: 'Calibri' })],
+                        spacing: { after: 200 }
+                    })
+                );
+
+                // Portefeuillehouders
+                sections.push(
+                    new Paragraph({
+                        children: [new TextRun({ text: 'Portefeuillehouders', bold: true, size: 20, color: '2D5A7B', font: 'Calibri', allCaps: true })],
+                        spacing: { after: 60 }
+                    }),
+                    new Paragraph({
+                        children: [new TextRun({ text: item.portefeuillehouders || '', size: 22, font: 'Calibri' })],
+                        spacing: { after: 300 }
+                    })
+                );
+
+                // Divider between items
+                if (i < top3.length - 1) {
+                    sections.push(new Paragraph({
+                        border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: 'E0DCD5' } },
+                        spacing: { after: 300 }
+                    }));
+                }
+            });
+
+            // Footer
+            sections.push(
+                new Paragraph({ spacing: { before: 400 } }),
+                new Paragraph({
+                    children: [new TextRun({ text: `Gegenereerd op ${dateStr} via Overlegtafel Tool Porteum`, size: 18, color: '9B9B9B', italics: true, font: 'Calibri' })],
+                })
+            );
+
+            const doc = new Document({
+                sections: [{
+                    properties: {},
+                    children: sections
+                }]
+            });
+
+            Packer.toBlob(doc).then(blob => {
+                const filename = `Agenda Overlegtafel Porteum - ${today.toLocaleDateString('nl-NL').replace(/\//g, '-')}.docx`;
+                saveAs(blob, filename);
+            });
         }
 
         // Listen for realtime updates
