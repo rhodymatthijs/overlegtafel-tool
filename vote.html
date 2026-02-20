@@ -470,6 +470,48 @@
             background: #c0392b;
         }
 
+        /* Vote period banner */
+        .period-banner {
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+            display: none;
+        }
+
+        .period-banner.closed {
+            background: #FFF3E0;
+            border: 2px solid #FFCC80;
+            color: #E65100;
+            display: block;
+        }
+
+        .period-banner.open {
+            background: #E8F5E9;
+            border: 2px solid #A5D6A7;
+            color: #2E7D32;
+            display: block;
+        }
+
+        .period-banner h3 {
+            font-size: 15px;
+            margin-bottom: 4px;
+        }
+
+        .admin-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            color: var(--text-muted);
+            text-decoration: none;
+            float: right;
+            margin-top: -4px;
+        }
+
+        .admin-link:hover { color: var(--primary); }
+
         @media (max-width: 600px) {
             .header { padding: 18px 16px; }
             .header-text h1 { font-size: 18px; }
@@ -492,7 +534,12 @@
     </div>
 
     <div class="container">
-        <a href="index.html" class="back-link">← Terug naar Sparringpartner</a>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <a href="index.html" class="back-link">← Terug naar Sparringpartner</a>
+            <a href="admin.html" class="admin-link">⚙️ Beheer</a>
+        </div>
+
+        <div id="periodBanner" class="period-banner"></div>
 
         <div class="intro">
             <h2>Welke onderwerpen behandelen we als eerste?</h2>
@@ -538,6 +585,8 @@
 
         let currentSort = 'votes';
         let agendaItems = {};
+        let votingOpen = false;
+        let votePeriodData = {};
 
         // Track which items user has voted on (per browser)
         function getVotedItems() {
@@ -555,6 +604,67 @@
         function hasVoted(itemId) {
             return getVotedItems()[itemId] === true;
         }
+
+        // Check if votes were reset since last visit
+        function checkVoteReset() {
+            db.ref('settings/voteResetId').on('value', (snap) => {
+                const resetId = snap.val();
+                if (!resetId) return;
+                const lastKnown = localStorage.getItem('overlegtafel_resetId');
+                if (lastKnown !== resetId) {
+                    // Votes were reset — clear local vote memory
+                    localStorage.setItem('overlegtafel_votes', '{}');
+                    localStorage.setItem('overlegtafel_resetId', resetId);
+                    renderItems(); // Re-render to show vote buttons again
+                }
+            });
+        }
+        checkVoteReset();
+
+        // Check vote period
+        function checkVotePeriod() {
+            db.ref('settings/votePeriod').on('value', (snap) => {
+                votePeriodData = snap.val() || {};
+                const now = new Date();
+                const banner = document.getElementById('periodBanner');
+
+                if (votePeriodData.forceClosed) {
+                    votingOpen = false;
+                    banner.className = 'period-banner closed';
+                    banner.innerHTML = '<h3>🔒 Stemmen is gesloten</h3><p>Het stemmen is op dit moment niet geopend. Je kunt de onderwerpen wel bekijken.</p>';
+                } else if (votePeriodData.forceOpen) {
+                    votingOpen = true;
+                    banner.className = 'period-banner open';
+                    banner.innerHTML = '<h3>✅ Stemmen is open!</h3><p>Je kunt nu stemmen op de onderwerpen die jij het belangrijkst vindt.</p>';
+                } else {
+                    const open = votePeriodData.openDate ? new Date(votePeriodData.openDate) : null;
+                    const close = votePeriodData.closeDate ? new Date(votePeriodData.closeDate) : null;
+
+                    if (open && close && now >= open && now <= close) {
+                        votingOpen = true;
+                        const closeStr = close.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+                        banner.className = 'period-banner open';
+                        banner.innerHTML = `<h3>✅ Stemmen is open!</h3><p>Je kunt stemmen tot en met ${closeStr}.</p>`;
+                    } else if (open && now < open) {
+                        votingOpen = false;
+                        const openStr = open.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+                        banner.className = 'period-banner closed';
+                        banner.innerHTML = `<h3>🔒 Stemmen is nog niet geopend</h3><p>Je kunt stemmen vanaf ${openStr}. Tot die tijd kun je de onderwerpen alvast bekijken.</p>`;
+                    } else if (close && now > close) {
+                        votingOpen = false;
+                        banner.className = 'period-banner closed';
+                        banner.innerHTML = '<h3>🔒 De stemperiode is verlopen</h3><p>Het stemmen is gesloten. De resultaten staan hieronder.</p>';
+                    } else {
+                        // No period set at all — default closed
+                        votingOpen = false;
+                        banner.className = 'period-banner closed';
+                        banner.innerHTML = '<h3>🔒 Stemmen is gesloten</h3><p>Er is nog geen stemperiode ingesteld. Je kunt de onderwerpen wel bekijken.</p>';
+                    }
+                }
+                renderItems(); // Re-render to update vote buttons
+            });
+        }
+        checkVotePeriod();
 
         function escapeHtml(text) {
             const div = document.createElement('div');
@@ -623,11 +733,18 @@
                             <div class="vote-section">
                                 <div class="vote-count">${voteCount}</div>
                                 <div class="vote-label">stem${voteCount === 1 ? '' : 'men'}</div>
-                                <button class="vote-btn ${voted ? 'voted' : ''}"
-                                    onclick="${voted ? '' : `vote('${key}')`}"
-                                    title="${voted ? 'Je hebt al gestemd' : 'Stem op dit onderwerp'}">
-                                    ${voted ? '✓' : '▲'}
-                                </button>
+                                ${votingOpen ? `
+                                    <button class="vote-btn ${voted ? 'voted' : ''}"
+                                        onclick="${voted ? '' : `vote('${key}')`}"
+                                        title="${voted ? 'Je hebt al gestemd' : 'Stem op dit onderwerp'}">
+                                        ${voted ? '✓' : '▲'}
+                                    </button>
+                                ` : `
+                                    <button class="vote-btn" style="opacity: 0.4; cursor: not-allowed; border-color: var(--border);"
+                                        title="Stemmen is momenteel gesloten" disabled>
+                                        🔒
+                                    </button>
+                                `}
                             </div>
                         </div>
                         <div class="card-body">
@@ -652,6 +769,10 @@
 
         function vote(itemId) {
             if (hasVoted(itemId)) return;
+            if (!votingOpen) {
+                alert('Stemmen is op dit moment niet geopend.');
+                return;
+            }
 
             // Increment vote in Firebase
             const ref = db.ref('agenda/' + itemId + '/votes');
