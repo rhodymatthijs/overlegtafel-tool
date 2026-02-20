@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overlegtafel – Beheer</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <style>
+        :root {
+            --primary: #2D5A7B;
+            --primary-light: #3A7CA5;
+            --primary-dark: #1E3F56;
+            --accent: #E8913A;
+            --accent-light: #F5A623;
+            --bg: #F7F5F2;
+            --bg-card: #FFFFFF;
+            --text: #2C2C2C;
+            --text-light: #6B6B6B;
+            --text-muted: #9B9B9B;
+            --border: #E0DCD5;
+            --success: #4CAF50;
+            --danger: #e74c3c;
+            --shadow: 0 2px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .header {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #0f2b3d 100%);
+            padding: 24px 32px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            color: white;
+            box-shadow: 0 4px 20px rgba(45, 90, 123, 0.3);
+        }
+
+        .header-icon {
+            width: 52px; height: 52px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 26px; flex-shrink: 0;
+        }
+
+        .header-text h1 { font-size: 22px; font-weight: 700; }
+        .header-text p { font-size: 13px; opacity: 0.8; margin-top: 2px; }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 24px 20px 60px;
+        }
+
+        /* Login screen */
+        .login-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+        }
+
+        .login-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+        }
+
+        .login-card h2 {
+            font-size: 20px;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .login-card p {
+            font-size: 14px;
+            color: var(--text-light);
+            margin-bottom: 24px;
+        }
+
+        .login-card input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 16px;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.2s;
+            margin-bottom: 16px;
+            letter-spacing: 4px;
+        }
+
+        .login-card input:focus { border-color: var(--primary-light); }
+
+        .login-card .error { color: var(--danger); font-size: 13px; margin-bottom: 12px; display: none; }
+
+        .login-card button {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .login-card button:hover { background: var(--primary-light); }
+
+        /* Admin content */
+        .admin-content { display: none; }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--primary);
+            font-size: 13.5px;
+            text-decoration: none;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+
+        .back-link:hover { color: var(--primary-light); }
+
+        /* Section cards */
+        .section-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 28px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .section-card h2 {
+            font-size: 17px;
+            color: var(--primary);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-card .desc {
+            font-size: 13.5px;
+            color: var(--text-light);
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        /* Stemperiode */
+        .period-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 18px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 16px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .period-status.open {
+            background: #E8F5E9;
+            color: #2E7D32;
+            border: 1px solid #A5D6A7;
+        }
+
+        .period-status.closed {
+            background: #FFF3E0;
+            color: #E65100;
+            border: 1px solid #FFCC80;
+        }
+
+        .period-status .dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .period-status.open .dot { background: #4CAF50; }
+        .period-status.closed .dot { background: #FF9800; }
+
+        .date-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .date-field {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .date-field label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .date-field input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .date-field input:focus { border-color: var(--primary-light); }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-light); }
+
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { background: #c0392b; }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-light);
+            border: 2px solid var(--border);
+        }
+        .btn-outline:hover { border-color: var(--text-light); color: var(--text); }
+
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { background: #43A047; }
+
+        .btn-warning { background: var(--accent); color: white; }
+        .btn-warning:hover { background: var(--accent-light); }
+
+        /* Items list */
+        .item-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .item-row:last-child { border-bottom: none; }
+
+        .item-info { flex: 1; }
+
+        .item-info h4 {
+            font-size: 14.5px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .item-info .meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .item-votes {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary);
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .item-btn {
+            padding: 6px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            background: transparent;
+            font-family: inherit;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-light);
+        }
+
+        .item-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .item-btn.archive:hover { border-color: var(--success); color: var(--success); }
+        .item-btn.delete:hover { border-color: var(--danger); color: var(--danger); }
+
+        .empty-msg {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--primary-dark);
+            color: white;
+            padding: 14px 28px;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: var(--shadow-lg);
+            z-index: 2000;
+            transition: transform 0.3s ease-out;
+        }
+
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        /* Mail preview */
+        .mail-preview {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 20px;
+            margin-top: 16px;
+            font-size: 13.5px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .mail-preview .subject {
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 600px) {
+            .header { padding: 18px 16px; }
+            .header-text h1 { font-size: 18px; }
+            .container { padding: 16px 12px 40px; }
+            .section-card { padding: 20px; }
+            .date-row { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-icon">⚙️</div>
+        <div class="header-text">
+            <h1>Overlegtafel – Beheer</h1>
+            <p>Porteum – Beheerderspaneel</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Login -->
+        <div class="login-screen" id="loginScreen">
+            <div class="login-card">
+                <h2>🔒 Beheerder login</h2>
+                <p>Voer het wachtwoord in om toegang te krijgen tot het beheerderspaneel.</p>
+                <input type="password" id="loginPassword" placeholder="••••" autofocus>
+                <div class="error" id="loginError">Onjuist wachtwoord.</div>
+                <button onclick="login()">Inloggen</button>
+            </div>
+        </div>
+
+        <!-- Admin content (hidden until login) -->
+        <div class="admin-content" id="adminContent">
+            <a href="vote.html" class="back-link">← Naar stempagina</a>
+
+            <!-- 1. Stemperiode beheer -->
+            <div class="section-card">
+                <h2>🗳️ Stemperiode</h2>
+                <p class="desc">Stel in wanneer het stemmen opent en sluit. Gebruikers kunnen alleen stemmen tijdens deze periode. Buiten de periode zien ze een melding.</p>
+
+                <div id="periodStatus" class="period-status closed">
+                    <span class="dot"></span>
+                    <span id="periodStatusText">Stemmen is gesloten</span>
+                </div>
+
+                <div class="date-row">
+                    <div class="date-field">
+                        <label>Stemmen opent op</label>
+                        <input type="datetime-local" id="voteOpenDate">
+                    </div>
+                    <div class="date-field">
+                        <label>Stemmen sluit op</label>
+                        <input type="datetime-local" id="voteCloseDate">
+                    </div>
+                </div>
+
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="savePeriod()">💾 Opslaan</button>
+                    <button class="btn btn-success" onclick="openNow()">▶️ Nu openen</button>
+                    <button class="btn btn-outline" onclick="closeNow()">⏸️ Nu sluiten</button>
+                </div>
+            </div>
+
+            <!-- 2. Stemmen resetten -->
+            <div class="section-card">
+                <h2>🔄 Stemmen resetten</h2>
+                <p class="desc">Zet alle stemmen op 0 voor een nieuwe stemronde. Dit wist ook de stem-registratie in de browsers van gebruikers bij hun volgende bezoek.</p>
+
+                <div class="btn-row">
+                    <button class="btn btn-danger" onclick="resetVotes()">🔄 Alle stemmen resetten</button>
+                </div>
+            </div>
+
+            <!-- 3. Onderwerpen beheren -->
+            <div class="section-card">
+                <h2>📋 Onderwerpen beheren</h2>
+                <p class="desc">Archiveer besproken onderwerpen of verwijder ze helemaal. Gearchiveerde onderwerpen worden niet meer getoond op de stempagina.</p>
+
+                <div id="itemsList">
+                    <div class="empty-msg">Laden...</div>
+                </div>
+            </div>
+
+            <!-- 4. Concept-mail genereren -->
+            <div class="section-card">
+                <h2>📧 Stemoproep-mail</h2>
+                <p class="desc">Genereer een concept-mail om naar de deelnemers te sturen met de link naar de stempagina en de stemperiode.</p>
+
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="generateMail()">📧 Genereer mail</button>
+                    <button class="btn btn-outline" onclick="copyMail()">📋 Kopieer naar klembord</button>
+                </div>
+
+                <div id="mailPreview" class="mail-preview" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <script>
+        const ADMIN_PASSWORD = '2304';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDxhrx8JeNt2YLqrFTmF6DK4ZFJatJSNKw",
+            authDomain: "overlegtafel-porteum.firebaseapp.com",
+            databaseURL: "https://overlegtafel-porteum-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "overlegtafel-porteum",
+            storageBucket: "overlegtafel-porteum.firebasestorage.app",
+            messagingSenderId: "655753632325",
+            appId: "1:655753632325:web:dd6c34ba5eb4a1c0cde12c"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let agendaItems = {};
+
+        // ============================================
+        // LOGIN
+        // ============================================
+
+        document.getElementById('loginPassword').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') login();
+        });
+
+        function login() {
+            const pw = document.getElementById('loginPassword').value.trim();
+            if (pw !== ADMIN_PASSWORD) {
+                document.getElementById('loginError').style.display = 'block';
+                document.getElementById('loginPassword').value = '';
+                return;
+            }
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('adminContent').style.display = 'block';
+            loadAll();
+        }
+
+        // ============================================
+        // STEMPERIODE
+        // ============================================
+
+        function loadPeriod() {
+            db.ref('settings/votePeriod').on('value', (snap) => {
+                const data = snap.val() || {};
+                if (data.openDate) {
+                    document.getElementById('voteOpenDate').value = data.openDate.substring(0, 16);
+                }
+                if (data.closeDate) {
+                    document.getElementById('voteCloseDate').value = data.closeDate.substring(0, 16);
+                }
+                updatePeriodStatus(data);
+            });
+        }
+
+        function updatePeriodStatus(data) {
+            const statusEl = document.getElementById('periodStatus');
+            const textEl = document.getElementById('periodStatusText');
+            const now = new Date();
+
+            if (data.forceClosed) {
+                statusEl.className = 'period-status closed';
+                textEl.textContent = 'Stemmen is handmatig gesloten';
+                return;
+            }
+
+            if (data.forceOpen) {
+                statusEl.className = 'period-status open';
+                textEl.textContent = 'Stemmen is handmatig geopend (zonder einddatum)';
+                return;
+            }
+
+            const open = data.openDate ? new Date(data.openDate) : null;
+            const close = data.closeDate ? new Date(data.closeDate) : null;
+
+            if (open && close && now >= open && now <= close) {
+                statusEl.className = 'period-status open';
+                const closeStr = close.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+                textEl.textContent = `Stemmen is open tot ${closeStr}`;
+            } else if (open && now < open) {
+                statusEl.className = 'period-status closed';
+                const openStr = open.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+                textEl.textContent = `Stemmen opent op ${openStr}`;
+            } else {
+                statusEl.className = 'period-status closed';
+                textEl.textContent = 'Stemmen is gesloten';
+            }
+        }
+
+        function savePeriod() {
+            const openDate = document.getElementById('voteOpenDate').value;
+            const closeDate = document.getElementById('voteCloseDate').value;
+
+            if (!openDate || !closeDate) {
+                showToast('Vul beide datums in');
+                return;
+            }
+
+            db.ref('settings/votePeriod').set({
+                openDate: new Date(openDate).toISOString(),
+                closeDate: new Date(closeDate).toISOString(),
+                forceOpen: false,
+                forceClosed: false
+            }).then(() => showToast('✅ Stemperiode opgeslagen'));
+        }
+
+        function openNow() {
+            db.ref('settings/votePeriod').update({
+                forceOpen: true,
+                forceClosed: false
+            }).then(() => showToast('✅ Stemmen is nu geopend'));
+        }
+
+        function closeNow() {
+            db.ref('settings/votePeriod').update({
+                forceOpen: false,
+                forceClosed: true
+            }).then(() => showToast('✅ Stemmen is nu gesloten'));
+        }
+
+        // ============================================
+        // STEMMEN RESETTEN
+        // ============================================
+
+        function resetVotes() {
+            if (!confirm('Weet je zeker dat je ALLE stemmen wilt resetten naar 0?\n\nDit kan niet ongedaan worden gemaakt.')) return;
+
+            const updates = {};
+            const resetId = Date.now().toString();
+
+            Object.keys(agendaItems).forEach(key => {
+                updates['agenda/' + key + '/votes'] = 0;
+            });
+            // Bump the reset counter so browsers know to clear their local votes
+            updates['settings/voteResetId'] = resetId;
+
+            db.ref().update(updates)
+                .then(() => showToast('✅ Alle stemmen zijn gereset naar 0'))
+                .catch(err => showToast('❌ Fout: ' + err.message));
+        }
+
+        // ============================================
+        // ONDERWERPEN BEHEREN
+        // ============================================
+
+        function loadItems() {
+            db.ref('agenda').on('value', (snap) => {
+                agendaItems = snap.val() || {};
+                renderAdminItems();
+            });
+        }
+
+        function renderAdminItems() {
+            const container = document.getElementById('itemsList');
+            const keys = Object.keys(agendaItems);
+
+            if (keys.length === 0) {
+                container.innerHTML = '<div class="empty-msg">Geen onderwerpen op de agenda.</div>';
+                return;
+            }
+
+            const sorted = keys.sort((a, b) => (agendaItems[b].votes || 0) - (agendaItems[a].votes || 0));
+
+            container.innerHTML = sorted.map(key => {
+                const item = agendaItems[key];
+                const votes = item.votes || 0;
+                const status = item.status || 'nieuw';
+
+                return `
+                    <div class="item-row">
+                        <div class="item-votes">${votes}</div>
+                        <div class="item-info">
+                            <h4>${escapeHtml(item.onderwerp || 'Zonder titel')}</h4>
+                            <div class="meta">👤 ${escapeHtml(item.auteur || '?')} · Status: ${escapeHtml(status)}</div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="item-btn archive" onclick="archiveItem('${key}')" title="Markeer als besproken">✅ Besproken</button>
+                            <button class="item-btn delete" onclick="deleteItem('${key}')" title="Verwijder van agenda">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function archiveItem(key) {
+            db.ref('agenda/' + key).update({ status: 'besproken' })
+                .then(() => {
+                    // Move to archive
+                    const item = agendaItems[key];
+                    db.ref('archief').push(item).then(() => {
+                        db.ref('agenda/' + key).remove();
+                        showToast('✅ Onderwerp gearchiveerd');
+                    });
+                });
+        }
+
+        function deleteItem(key) {
+            const item = agendaItems[key];
+            if (!confirm(`Weet je zeker dat je "${item.onderwerp}" wilt verwijderen?`)) return;
+
+            db.ref('agenda/' + key).remove()
+                .then(() => showToast('✅ Onderwerp verwijderd'));
+        }
+
+        // ============================================
+        // MAIL GENEREREN
+        // ============================================
+
+        function generateMail() {
+            const openVal = document.getElementById('voteOpenDate').value;
+            const closeVal = document.getElementById('voteCloseDate').value;
+
+            let periodeText = '';
+            if (openVal && closeVal) {
+                const open = new Date(openVal);
+                const close = new Date(closeVal);
+                const openStr = open.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' });
+                const closeStr = close.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+                periodeText = `Je kunt stemmen vanaf ${openStr} tot en met ${closeStr}.`;
+            } else {
+                periodeText = 'De stemperiode wordt binnenkort geopend.';
+            }
+
+            const count = Object.keys(agendaItems).length;
+
+            const mail = `Onderwerp: Overlegtafel – Stem op de agenda-onderwerpen
+
+Hoi allemaal,
+
+De volgende overlegtafel komt eraan en er ${count === 1 ? 'staat' : 'staan'} ${count} onderwerp${count === 1 ? '' : 'en'} op de agenda. Om te bepalen welke onderwerpen we als eerste behandelen, vraag ik iedereen om te stemmen.
+
+${periodeText}
+
+Stem hier: https://rhodymatthijs.github.io/overlegtafel-tool/vote.html
+
+Je kunt op meerdere onderwerpen stemmen, maar slechts één keer per onderwerp. De top 3 met de meeste stemmen wordt als eerste behandeld.
+
+Heb je zelf nog een onderwerp? Gebruik de sparringpartner om het scherp te krijgen en direct op de agenda te plaatsen:
+https://rhodymatthijs.github.io/overlegtafel-tool/
+
+Groet,
+Rhody`;
+
+            document.getElementById('mailPreview').style.display = 'block';
+            document.getElementById('mailPreview').innerHTML = `<div class="subject">Onderwerp: Overlegtafel – Stem op de agenda-onderwerpen</div>${escapeHtml(mail.split('\n').slice(2).join('\n'))}`;
+
+            // Store full mail for copy
+            document.getElementById('mailPreview').dataset.fullMail = mail;
+        }
+
+        function copyMail() {
+            const preview = document.getElementById('mailPreview');
+            const mail = preview.dataset.fullMail;
+            if (!mail) {
+                showToast('Genereer eerst een mail');
+                return;
+            }
+            navigator.clipboard.writeText(mail).then(() => showToast('✅ Mail gekopieerd naar klembord'));
+        }
+
+        // ============================================
+        // HELPERS
+        // ============================================
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        function loadAll() {
+            loadPeriod();
+            loadItems();
+        }
+    </script>
+</body>
+</html>
