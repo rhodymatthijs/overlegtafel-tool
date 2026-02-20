@@ -648,12 +648,15 @@
                     } else if (open && now < open) {
                         votingOpen = false;
                         const openStr = open.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+                        const closeStr = close ? close.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : '';
                         banner.className = 'period-banner closed';
-                        banner.innerHTML = `<h3>🔒 Stemmen is nog niet geopend</h3><p>Je kunt stemmen vanaf ${openStr}. Tot die tijd kun je de onderwerpen alvast bekijken.</p>`;
+                        banner.innerHTML = `<h3>🗳️ Stemperiode</h3><p>Er kan gestemd worden van ${openStr}${close ? ` tot en met ${closeStr}` : ''}. Tot die tijd kun je de onderwerpen alvast bekijken.</p>`;
                     } else if (close && now > close) {
                         votingOpen = false;
+                        const openStr = open ? open.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : '';
+                        const closeStr = close.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
                         banner.className = 'period-banner closed';
-                        banner.innerHTML = '<h3>🔒 De stemperiode is verlopen</h3><p>Het stemmen is gesloten. De resultaten staan hieronder.</p>';
+                        banner.innerHTML = `<h3>🗳️ Stemperiode</h3><p>Er kan gestemd worden ${open ? `van ${openStr} ` : ''}tot en met ${closeStr}. Tot die tijd kun je de onderwerpen alvast bekijken.</p>`;
                     } else {
                         // No period set at all — default closed
                         votingOpen = false;
