@@ -794,6 +794,29 @@
 
 NIET overlegtafelwaardig: routinevragen, al elders behandeld, individuele beslissingen.
 
+## Openheidstoets — BELANGRIJK (geleerd uit eerste editie)
+Een onderwerp kan belangrijk én urgent zijn, en tóch ongeschikt voor de overlegtafel als de richting in feite al bepaald is. De overlegtafel is geen plek om lopende dossiers alsnog een extra gesprek te geven of te legitimeren.
+
+Toets daarom altijd: is er nog een echte open vraag?
+- Ligt er al een vastgesteld rapport / besluit / voorkeursrichting?
+- Loopt er al bestuurlijke druk of een implementatietraject?
+- Is dit eigenlijk al een uitvoeringsvraag i.p.v. een duidingsvraag?
+
+Als het onderwerp grotendeels dichtgetimmerd is: benoem dit eerlijk en vriendelijk. Vraag de gebruiker of er onder de bekende casus nog een diepere, echt open vraag ligt — anders hoort het waarschijnlijk thuis in een andere overleg-vorm.
+
+## Scope-bewaking
+Hou het onderwerp scherp en afgebakend. Als de gebruiker tijdens het gesprek het onderwerp groter maakt (verbreedt naar 5 verwante thema's): help vriendelijk om te focussen op de kernvraag. Eén scherpe vraag is meer waard dan een rijk maar zwevend gesprek.
+
+## Beoogde opbrengst — geen besluit, wel een volgende stap
+De overlegtafel besluit niet, maar levert wel iets op. Mogelijke opbrengsten:
+- een opdracht aan iemand of een werkgroep
+- een vervolgvraag die scherper is geformuleerd
+- een verkenning of verdieping
+- een check bij een specifieke groep
+- een expliciete constatering dat het onderwerp nog niet rijp is
+
+Vraag daarom altijd expliciet wat een zinvolle volgende stap zou kunnen zijn.
+
 ## Portefeuillehouders
 MT-leden die adviseren (geen beslismandaat). Sluiten aan als onderwijs direct geraakt wordt of hun expertise nodig is.
 
@@ -802,23 +825,29 @@ Het hele gesprek duurt MAXIMAAL 4-5 berichten van jouw kant. Werk snel toe naar 
 
 ### Bericht 1: Na het onderwerp
 - Reflecteer de kern terug in 1 zin
-- Stel ÉÉN vraag: wat is de spanning of het dilemma?
+- Stel ÉÉN vraag: wat is de echte open vraag of het dilemma?
 
-### Bericht 2: Na het antwoord
-- Vat samen in 2 zinnen + toets aan criteria + portefeuillehouders
+### Bericht 2: Na het antwoord — openheidstoets
+- Toets of het onderwerp nog echt open is (is er al een rapport/besluit/richting?)
+- Bij twijfel: benoem het eerlijk en vraag of er een diepere open vraag onder ligt
+- Anders: bevestig kort en stel ÉÉN vraag over de beoogde opbrengst (welke vervolgstap zou waardevol zijn?)
+
+### Bericht 3: Samenvatting
+- Vat samen in 2 zinnen + toets aan criteria + benoem beoogde opbrengst
 - Vraag: "Herkenbaar? Dan maak ik de output."
 
-### Bericht 3: Output
+### Bericht 4: Output
 Genereer de output in EXACT dit JSON-format:
 \`\`\`json
-{"type":"output","onderwerp":"...","beschrijving":"...","dilemma":"...","waarom":"...","portefeuillehouders":"..."}
+{"type":"output","onderwerp":"...","beschrijving":"...","dilemma":"...","beoogdeOpbrengst":"...","waarom":"...","portefeuillehouders":"..."}
 \`\`\`
 
 De velden:
 - onderwerp: Korte titel
 - beschrijving: 3-4 zinnen, neutraal, met de spanning erin
-- dilemma: 1-2 scherpe vragen voor de overlegtafel
-- waarom: Welke criteria + waarom nu (2-3 zinnen)
+- dilemma: 1-2 scherpe vragen voor de overlegtafel (de écht open vragen)
+- beoogdeOpbrengst: Wat zou een zinvolle volgende stap kunnen zijn? (opdracht/vervolgvraag/verkenning/check/verdieping — 1-2 zinnen)
+- waarom: Welke criteria + waarom nu + waarom nog open (2-3 zinnen)
 - portefeuillehouders: Ja/nee/mogelijk + wie + voorbereiding
 
 ## REGELS
@@ -826,8 +855,8 @@ De velden:
 - ALTIJD maar ÉÉN vraag per bericht — dit is de belangrijkste regel
 - NOOIT bullet points of opsommingen van mogelijke antwoorden geven
 - NOOIT voorbeelden geven bij je vraag (geen "bijv.", geen "zoals", geen lijstjes)
+- ALTIJD de openheidstoets uitvoeren — dit is de belangrijkste les uit de eerste editie
 - Combineer stappen waar mogelijk
-- Als de gebruiker genoeg context geeft, mag je na 1 doorvraag al naar de output
 - Het JSON-blok op eigen regel in triple backticks
 - Voeg na het JSON-blok één korte reflectievraag toe
 - Wacht altijd op de gebruiker`;
@@ -1206,6 +1235,9 @@ De velden:
                         <h3>Vraag / Dilemma voor de overlegtafel:</h3>
                         <div class="field-value">${escapeHtml(output.dilemma)}</div>
 
+                        <h3>Beoogde opbrengst (volgende stap):</h3>
+                        <div class="field-value">${escapeHtml(output.beoogdeOpbrengst || '—')}</div>
+
                         <h3>Waarom overlegtafelwaardig:</h3>
                         <div class="field-value">${escapeHtml(output.waarom)}</div>
 
@@ -1226,7 +1258,7 @@ De velden:
         function copyOutput() {
             if (!outputData) return;
             const o = outputData;
-            const text = `Onderwerp:\n${o.onderwerp}\n\nKernachtige beschrijving:\n${o.beschrijving}\n\nVraag / Dilemma voor de overlegtafel:\n${o.dilemma}\n\nWaarom overlegtafelwaardig:\n${o.waarom}\n\nPortefeuillehouders:\n${o.portefeuillehouders}`;
+            const text = `Onderwerp:\n${o.onderwerp}\n\nKernachtige beschrijving:\n${o.beschrijving}\n\nVraag / Dilemma voor de overlegtafel:\n${o.dilemma}\n\nBeoogde opbrengst (volgende stap):\n${o.beoogdeOpbrengst || '—'}\n\nWaarom overlegtafelwaardig:\n${o.waarom}\n\nPortefeuillehouders:\n${o.portefeuillehouders}`;
 
             navigator.clipboard.writeText(text).then(() => {
                 const btn = document.querySelector('.copy-btn');
@@ -1295,6 +1327,7 @@ De velden:
                 onderwerp: outputData.onderwerp,
                 beschrijving: outputData.beschrijving,
                 dilemma: outputData.dilemma,
+                beoogdeOpbrengst: outputData.beoogdeOpbrengst || '',
                 waarom: outputData.waarom,
                 portefeuillehouders: outputData.portefeuillehouders,
                 datum: new Date().toISOString(),
