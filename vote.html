@@ -544,6 +544,7 @@
         <div class="intro">
             <h2>Welke onderwerpen behandelen we als eerste?</h2>
             <p>Hieronder staan de ingebrachte onderwerpen voor de overlegtafel. Stem op de onderwerpen die jij het belangrijkst vindt — je kunt op meerdere onderwerpen stemmen, maar slechts één keer per onderwerp.</p>
+            <p style="margin-top: 10px; font-size: 13px; color: var(--text-muted);"><em>Op basis van de eerste editie behandelen we voorlopig één onderwerp per overlegtafel, zodat er echt tijd is om te duiden. Kies dus bewust het onderwerp waar gezamenlijke verkenning het meest nodig is.</em></p>
         </div>
 
         <div class="sort-bar">
@@ -759,6 +760,12 @@
                                 <label>Vraag / Dilemma</label>
                                 <p>${escapeHtml(item.dilemma || '')}</p>
                             </div>
+                            ${item.beoogdeOpbrengst ? `
+                                <div class="card-field">
+                                    <label>Beoogde opbrengst</label>
+                                    <p>${escapeHtml(item.beoogdeOpbrengst)}</p>
+                                </div>
+                            ` : ''}
                         </div>
                         <div class="card-footer">
                             <span class="tag">Status: ${escapeHtml(item.status || 'nieuw')}</span>
@@ -1009,6 +1016,20 @@
                         spacing: { after: 200 }
                     })
                 );
+
+                // Beoogde opbrengst
+                if (item.beoogdeOpbrengst) {
+                    sections.push(
+                        new Paragraph({
+                            children: [new TextRun({ text: 'Beoogde opbrengst (volgende stap)', bold: true, size: 20, color: '2D5A7B', font: 'Calibri', allCaps: true })],
+                            spacing: { after: 60 }
+                        }),
+                        new Paragraph({
+                            children: [new TextRun({ text: item.beoogdeOpbrengst, size: 22, font: 'Calibri' })],
+                            spacing: { after: 200 }
+                        })
+                    );
+                }
 
                 // Waarom
                 sections.push(
