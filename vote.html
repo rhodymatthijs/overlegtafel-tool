@@ -550,7 +550,7 @@
         <div class="sort-bar">
             <button class="sort-btn active" onclick="sortItems('votes')">🔥 Meeste stemmen</button>
             <button class="sort-btn" onclick="sortItems('date')">🕐 Nieuwste eerst</button>
-            <button class="sort-btn agenda-export-btn" id="exportBtn" onclick="generateAgendaDoc()" style="margin-left: auto; background: var(--primary); color: white; border-color: var(--primary);">📄 Maak agenda (Top 3)</button>
+            <button class="sort-btn agenda-export-btn" id="exportBtn" onclick="generateAgendaDoc()" style="margin-left: auto; background: var(--primary); color: white; border-color: var(--primary);">📄 Maak agenda</button>
         </div>
 
         <div id="itemsCount" class="items-count"></div>
@@ -937,11 +937,11 @@
         function buildWordDocument() {
             const { Document, Packer, Paragraph, TextRun, HeadingLevel, BorderStyle, AlignmentType, TabStopType, TabStopPosition } = docx;
 
-            // Get top 3 by votes
+            // Get top item by votes (we behandelen één onderwerp per overlegtafel)
             const keys = Object.keys(agendaItems);
             const top3 = keys
                 .sort((a, b) => (agendaItems[b].votes || 0) - (agendaItems[a].votes || 0))
-                .slice(0, 3)
+                .slice(0, 1)
                 .map(k => agendaItems[k]);
 
             const today = new Date();
@@ -960,7 +960,7 @@
                     spacing: { after: 200 }
                 }),
                 new Paragraph({
-                    children: [new TextRun({ text: `Top ${top3.length} onderwerpen op basis van stemmen`, size: 22, color: '6B6B6B', italics: true, font: 'Calibri' })],
+                    children: [new TextRun({ text: `Onderwerp met de meeste stemmen`, size: 22, color: '6B6B6B', italics: true, font: 'Calibri' })],
                     spacing: { after: 400 }
                 })
             );
