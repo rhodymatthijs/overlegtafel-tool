@@ -549,6 +549,39 @@
             display: none;
         }
 
+        /* Deadline banner */
+        .deadline-banner {
+            width: 100%;
+            max-width: 720px;
+            margin: 16px auto 0;
+            padding: 14px 24px;
+            border-radius: var(--radius);
+            font-size: 13.5px;
+            line-height: 1.5;
+        }
+
+        .deadline-banner.open {
+            background: #E8F5E9;
+            border: 1px solid #A5D6A7;
+            color: #2E7D32;
+        }
+
+        .deadline-banner.closing-soon {
+            background: #FFF3E0;
+            border: 1px solid #FFCC80;
+            color: #E65100;
+        }
+
+        .deadline-banner.closed {
+            background: #FFEBEE;
+            border: 1px solid #EF9A9A;
+            color: #C62828;
+        }
+
+        .deadline-banner strong {
+            font-weight: 600;
+        }
+
         /* Agenda button */
         .agenda-btn {
             display: inline-flex;
@@ -701,6 +734,8 @@
         </div>
     </div>
 
+    <div id="deadlineBanner" class="deadline-banner" style="display: none;"></div>
+
     <div class="container">
         <div class="progress-container">
             <div class="progress-steps">
@@ -766,6 +801,9 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+
+        // Submission deadline tracking
+        let submissionOpen = true;
 
         // API key (split to avoid detection by automated scanners)
         const _k = ['sk-ant-api03-lafT5jdvel0NIdFEh','lPzU7whqyhgugCG1Z8pLMQVU2iljgX-1VivUfhtGfmSN5-FMte1GOMpJq7ZUxKHEXWaMw-MzxlYwAA'];
@@ -1112,6 +1150,46 @@ De velden:
 
         startConversation();
 
+        // Check submission deadline
+        function checkSubmitDeadline() {
+            db.ref('settings/submitDeadline').on('value', (snap) => {
+                const data = snap.val();
+                const banner = document.getElementById('deadlineBanner');
+
+                if (!data || !data.deadline) {
+                    banner.style.display = 'none';
+                    submissionOpen = true;
+                    return;
+                }
+
+                const deadline = new Date(data.deadline);
+                const meetingDate = data.meetingDate ? new Date(data.meetingDate) : null;
+                const now = new Date();
+
+                const deadlineStr = deadline.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+                const meetingStr = meetingDate ? meetingDate.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' }) : '';
+
+                if (now > deadline) {
+                    submissionOpen = false;
+                    banner.className = 'deadline-banner closed';
+                    banner.innerHTML = '<strong>⏰ De indientermijn is gesloten.</strong> Je kunt de sparringpartner nog gebruiken, maar onderwerpen kunnen niet meer op de agenda geplaatst worden' + (meetingStr ? ' voor de overlegtafel van ' + meetingStr : '') + '.';
+                    banner.style.display = 'block';
+                } else {
+                    submissionOpen = true;
+                    const hoursLeft = (deadline - now) / (1000 * 60 * 60);
+                    if (hoursLeft <= 24) {
+                        banner.className = 'deadline-banner closing-soon';
+                        banner.innerHTML = '<strong>⏰ Nog ' + Math.ceil(hoursLeft) + ' uur!</strong> Onderwerpen indienen kan tot ' + deadlineStr + (meetingStr ? '. De overlegtafel is op ' + meetingStr + '.' : '.');
+                    } else {
+                        banner.className = 'deadline-banner open';
+                        banner.innerHTML = '<strong>📌 Overlegtafel' + (meetingStr ? ' op ' + meetingStr : '') + '</strong> — Onderwerpen indienen kan tot ' + deadlineStr + '.';
+                    }
+                    banner.style.display = 'block';
+                }
+            });
+        }
+        checkSubmitDeadline();
+
         // Handle send
         async function handleSend() {
             const text = userInput.value.trim();
@@ -1276,6 +1354,11 @@ De velden:
         // ============================================
 
         function showNameDialog() {
+            if (!submissionOpen) {
+                addBotMessage('<p><strong>⏰ De indientermijn is gesloten</strong></p><p>Je kunt dit onderwerp niet meer op de agenda plaatsen. Je kunt het resultaat wel kopiëren via de knop hierboven.</p>');
+                scrollToBottom();
+                return;
+            }
             const overlay = document.createElement('div');
             overlay.className = 'name-overlay';
             overlay.id = 'nameOverlay';

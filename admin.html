@@ -407,6 +407,27 @@
         <div class="admin-content" id="adminContent">
             <a href="vote.html" class="back-link">← Naar stempagina</a>
 
+            <!-- 0. Vergadering & Indiendeadline -->
+            <div class="section-card">
+                <h2>📅 Vergadering & Indiendeadline</h2>
+                <p class="desc">Stel de vergaderdatum en de deadline voor het indienen van onderwerpen in. Na de deadline kunnen er geen nieuwe onderwerpen meer op de agenda geplaatst worden via de sparringpartner.</p>
+
+                <div class="date-row">
+                    <div class="date-field">
+                        <label>Vergaderdatum</label>
+                        <input type="date" id="meetingDate">
+                    </div>
+                    <div class="date-field">
+                        <label>Deadline indiening</label>
+                        <input type="datetime-local" id="submitDeadline">
+                    </div>
+                </div>
+
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="saveSubmitDeadline()">💾 Opslaan</button>
+                </div>
+            </div>
+
             <!-- 1. Stemperiode beheer -->
             <div class="section-card">
                 <h2>🗳️ Stemperiode</h2>
@@ -597,6 +618,46 @@
         }
 
         // ============================================
+        // VERGADERING & INDIENDEADLINE
+        // ============================================
+
+        function loadSubmitDeadline() {
+            db.ref('settings/submitDeadline').on('value', (snap) => {
+                const data = snap.val() || {};
+                if (data.meetingDate) {
+                    const d = new Date(data.meetingDate);
+                    document.getElementById('meetingDate').value = d.toISOString().substring(0, 10);
+                }
+                if (data.deadline) {
+                    const dl = new Date(data.deadline);
+                    const offset = dl.getTimezoneOffset();
+                    const local = new Date(dl.getTime() - offset * 60000);
+                    document.getElementById('submitDeadline').value = local.toISOString().substring(0, 16);
+                }
+            });
+        }
+
+        function saveSubmitDeadline() {
+            const meetingDate = document.getElementById('meetingDate').value;
+            const deadline = document.getElementById('submitDeadline').value;
+
+            if (!deadline) {
+                showToast('Vul de deadline in');
+                return;
+            }
+
+            const data = {
+                deadline: new Date(deadline).toISOString()
+            };
+            if (meetingDate) {
+                data.meetingDate = new Date(meetingDate).toISOString();
+            }
+
+            db.ref('settings/submitDeadline').set(data)
+                .then(() => showToast('✅ Deadline opgeslagen'));
+        }
+
+        // ============================================
         // STEMMEN RESETTEN
         // ============================================
 
@@ -687,6 +748,20 @@
         function generateMail() {
             const openVal = document.getElementById('voteOpenDate').value;
             const closeVal = document.getElementById('voteCloseDate').value;
+            const meetingVal = document.getElementById('meetingDate').value;
+            const deadlineVal = document.getElementById('submitDeadline').value;
+
+            let meetingText = '';
+            if (meetingVal) {
+                const m = new Date(meetingVal);
+                meetingText = m.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' });
+            }
+
+            let deadlineText = '';
+            if (deadlineVal) {
+                const d = new Date(deadlineVal);
+                deadlineText = d.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+            }
 
             let periodeText = '';
             if (openVal && closeVal) {
@@ -701,26 +776,27 @@
 
             const count = Object.keys(agendaItems).length;
 
-            const mail = `Onderwerp: Overlegtafel – Stem op de agenda-onderwerpen
+            const mail = `Onderwerp: Overlegtafel${meetingText ? ' ' + meetingText : ''} – Dien je onderwerp in & stem
 
 Hoi allemaal,
 
-De volgende overlegtafel komt eraan en er ${count === 1 ? 'staat' : 'staan'} ${count} onderwerp${count === 1 ? '' : 'en'} op de agenda. Om te bepalen welke onderwerpen we als eerste behandelen, vraag ik iedereen om te stemmen.
+De volgende overlegtafel is ${meetingText ? 'op ' + meetingText : 'binnenkort'}. Twee dingen om te doen:
 
-${periodeText}
-
+📌 Onderwerp indienen
+Heb je een onderwerp voor de overlegtafel? Gebruik de sparringpartner om het scherp te krijgen en direct op de agenda te plaatsen:
+https://rhodymatthijs.github.io/overlegtafel-tool/
+${deadlineText ? 'Indienen kan tot ' + deadlineText + '.' : ''}
+🗳️ Stemmen
+${count > 0 ? 'Er ' + (count === 1 ? 'staat' : 'staan') + ' ' + count + ' onderwerp' + (count === 1 ? '' : 'en') + ' op de agenda. ' : ''}${periodeText}
 Stem hier: https://rhodymatthijs.github.io/overlegtafel-tool/vote.html
 
-Je kunt op meerdere onderwerpen stemmen, maar slechts één keer per onderwerp. De top 3 met de meeste stemmen wordt als eerste behandeld.
-
-Heb je zelf nog een onderwerp? Gebruik de sparringpartner om het scherp te krijgen en direct op de agenda te plaatsen:
-https://rhodymatthijs.github.io/overlegtafel-tool/
+Op basis van jullie stemmen bepalen we welk onderwerp we behandelen.
 
 Groet,
 Rhody`;
 
             document.getElementById('mailPreview').style.display = 'block';
-            document.getElementById('mailPreview').innerHTML = `<div class="subject">Onderwerp: Overlegtafel – Stem op de agenda-onderwerpen</div>${escapeHtml(mail.split('\n').slice(2).join('\n'))}`;
+            document.getElementById('mailPreview').innerHTML = `<div class="subject">${escapeHtml(mail.split('\n')[0])}</div>${escapeHtml(mail.split('\n').slice(2).join('\n'))}`;
 
             // Store full mail for copy
             document.getElementById('mailPreview').dataset.fullMail = mail;
@@ -755,6 +831,7 @@ Rhody`;
 
         function loadAll() {
             loadPeriod();
+            loadSubmitDeadline();
             loadItems();
         }
     </script>
